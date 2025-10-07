@@ -1,39 +1,76 @@
 import React, { useState } from "react";
 import InputField from "./InputField";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
+const signupSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    email: z.email("Email is required"),
+    password: z
+      .string()
+      .min(1, "Password is required")
+      .min(6, "Password ahould atleast have 6 characters"),
+    confirmPassword: z.string().min(1, "Confirm password is required"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Password do not match",
+  });
 const SignUp = () => {
-    const [form, setForm]=useState({name:"", email:"", password:"", confirmPassword:""})
-    const handleChange = (e, field) => {
-        setForm({...form, [field]:e.target.value})
-    }
-    const [errors, setErrors] = useState({})
-    const handleSubmit = () => {
-        let newErrors={}
-        for( const [key, value] of Object.entries(form)){
-            if(!value){
-                newErrors[key] = `Invalid ${key}`
-            }
-        }
-        setErrors(newErrors)
-    }
-    
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(signupSchema) });
+  const onSubmit = (data) => {
+    console.log(data);
+    navigate("/login");
+  };
+
   return (
-    <div>
-      <div className=" mx-auto flex flex-col max-w-sm items-center gap-x-4 gap-y-2">
-        <div>
-          <InputField label="Name" type="text" value={errors.name?errors.name:form.name} onChange={(e)=>handleChange(e, "name")} />
-          <InputField label="Email" type="email" value={errors.email?errors.email:form.email} onChange={(e)=>handleChange(e, "email")} />
-          <InputField label="Password" type={errors.password ? "text" : "password"} value={errors.password?errors.password:form.password} onChange={(e)=>handleChange(e, "password")} />
-          <InputField
-            label="Confirm Password"
-            type={errors.confirmPassword?"text":"password"}
-            value={errors.confirmPassword?errors.confirmPassword:form.confirmPassword}
-            onChange={(e)=>handleChange(e, "confirmPassword")} 
-          />
-        </div>
-        <button className="bg-[#A9BCFF] p-2 rounded-md w-3xs" onClick={()=>handleSubmit()} >Sign-Up</button>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col items-center h-full"
+    >
+      <div className="flex flex-col">
+        <InputField
+          placeholder="Enter name"
+          label="Name"
+          errors={errors.name}
+          {...register("name")}
+        />
+        <InputField
+          placeholder="Enter email"
+          label="Email"
+          errors={errors.email}
+          {...register("email")}
+        />
+        <InputField
+          placeholder="Enter password"
+          label="Password"
+          errors={errors.password}
+          {...register("password")}
+          type="password"
+        />
+        <InputField
+          placeholder="Confirm password"
+          label="Confirm password"
+          errors={errors.confirmPassword}
+          {...register("confirmPassword")}
+          type="password"
+        />
       </div>
-    </div>
+      <button
+        className="mt-auto bg-[#A9BCFF] w-80 h-12 rounded-md mx-auto hover:bg-[#48c06e] hover:text-white"
+        type="submit"
+      >
+        Sign-up
+      </button>
+    </form>
   );
 };
 
